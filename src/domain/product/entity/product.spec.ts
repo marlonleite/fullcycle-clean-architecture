@@ -1,22 +1,45 @@
+import NotificationError from "../../@shared/notification/notification.error";
 import Product from "./product";
 
 describe("Product unit tests", () => {
   it("should throw error when id is empty", () => {
     expect(() => {
       const product = new Product("", "Product 1", 100);
-    }).toThrowError("Id is required");
+    }).toThrowError("product: Id is required");
   });
 
   it("should throw error when name is empty", () => {
     expect(() => {
       const product = new Product("123", "", 100);
-    }).toThrowError("Name is required");
+    }).toThrowError("product: Name is required");
   });
 
   it("should throw error when price is less than zero", () => {
     expect(() => {
       const product = new Product("123", "Name", -1);
-    }).toThrowError("Price must be greater than zero");
+    }).toThrowError("product: Price must be greater than zero");
+  });
+
+  it("should notify when name is empty and price is negative", () => {
+    expect.assertions(4);
+    try {
+      const product = new Product("123", "", -1);
+      expect(product).toBeUndefined();
+    } catch (error) {
+      expect(error).toBeInstanceOf(NotificationError);
+      const notificationError = error as NotificationError;
+      expect(notificationError.errors).toContainEqual({
+        context: "product",
+        message: "Name is required",
+      });
+      expect(notificationError.errors).toContainEqual({
+        context: "product",
+        message: "Price must be greater than zero",
+      });
+      expect(notificationError.message).toBe(
+        "product: Name is required,product: Price must be greater than zero"
+      );
+    }
   });
 
   it("should change name", () => {
